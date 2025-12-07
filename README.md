@@ -2,7 +2,7 @@
 
 **Cognitive concentration inference engine — transforming biosignals and digital behavior into real-time focus intelligence**
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform Support](https://img.shields.io/badge/platforms-Python%20%7C%20Dart%20%7C%20Kotlin%20%7C%20Swift-blue.svg)](#-sdks)
 
 Synheart Focus is the cognitive concentration layer of Synheart — estimating moment-to-moment focus levels by fusing biosignals, behavioral interaction patterns, and circadian context. It powers Syni, Syni Life, SWIP, and any mind-aware application built on Synheart.
@@ -146,6 +146,72 @@ final behaviorData = BehaviorData(
 final focusState = await focusEngine.infer(hsiData, behaviorData);
 ```
 
+### Kotlin
+
+```kotlin
+import ai.synheart.focus.*
+
+val config = FocusConfig()
+val engine = FocusEngine.fromConfig(config)
+
+// Subscribe to updates
+engine.subscribe { focusState ->
+    println("Focus Score: ${focusState.focusScore}")
+    println("Label: ${focusState.focusLabel}")
+    println("Cognitive Load: ${focusState.cognitiveLoad}")
+}
+
+// Provide HSI inputs
+val hsiData = mapOf(
+    "hr" to 72,
+    "hrv_rmssd" to 45,
+    "stress_index" to 0.3,
+    "motion_intensity" to 0.1
+)
+
+val behaviorData = mapOf(
+    "task_switch_rate" to 0.2,
+    "interaction_burstiness" to 0.15,
+    "idle_ratio" to 0.1
+)
+
+// Infer focus state
+val focusState = engine.infer(hsiData, behaviorData)
+```
+
+### Swift
+
+```swift
+import SynheartFocus
+
+let config = FocusConfig()
+let engine = try FocusEngine.fromConfig(config: config)
+
+// Subscribe to updates
+engine.subscribe { focusState in
+    print("Focus Score: \(focusState.focusScore)")
+    print("Label: \(focusState.focusLabel)")
+    print("Cognitive Load: \(focusState.cognitiveLoad)")
+}
+
+// Provide HSI inputs
+let hsiData: [String: Any] = [
+    "hr": 72,
+    "hrv_rmssd": 45,
+    "stress_index": 0.3,
+    "motion_intensity": 0.1
+]
+
+let behaviorData: [String: Any] = [
+    "task_switch_rate": 0.2,
+    "interaction_burstiness": 0.15,
+    "idle_ratio": 0.1
+]
+
+// Infer focus state
+let focusState = try engine.infer(hsiData: hsiData, behaviorData: behaviorData)
+```
+
 ## 🏗️ Architecture
 
 Synheart Focus is a **multimodal fusion model** that combines:
@@ -248,12 +314,15 @@ Wear SDK / Phone / Behavior SDKs
 - **Update Frequency**: Every 60-120 seconds
 - **Cloud Aggregation**: < 15 seconds for daily summaries
 
-## 🔒 Privacy & Safety
+## 🔒 Privacy & Security
 
 - **No Content Captured**: No text, URLs, messages, or screen content
 - **Only Timing + Biosignal Features**: Derived features only, no raw data
 - **On-Device Processing**: All inference happens locally
 - **Consent-Gated**: All behavioral and focus data requires explicit consent
+- **No Data Retention**: Raw biometric data is not retained after processing
+- **No Network Calls**: No data is sent to external servers
+- **Privacy-First Design**: No built-in storage - you control what gets persisted
 - **Non-Clinical**: Not a judgment or productivity metric; cannot diagnose impairment
 
 ## 📊 Benchmarks
@@ -263,35 +332,13 @@ Wear SDK / Phone / Behavior SDKs
 - **Inference Latency**: 95th percentile < 30ms
 - **State Update Accuracy**: Within 1 window
 
-## 🗺️ Roadmap
-
-### v1.0
-- Focus SDK (all platforms)
-- Focus model (Transformer or CNN-LSTM)
-- Short-window focus scoring
-- Focus → HSI fusion
-- Cognitive load inference
-- Deep focus block detection
-- Integration with Syni and Syni Life
-
-### v1.1
-- Fatigue modeling
-- Hour-by-hour focus trends
-- Focus stability score
-- Focus vs emotion/behavior correlation engine
-
-### v2.0
-- Focus forecasting
-- Personalized focus baseline
-- Task-specific focus signatures
-
 ## 🤝 Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## 📄 License
 
-Apache 2.0 License - see [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🔗 Related Projects
 
@@ -300,14 +347,21 @@ Apache 2.0 License - see [LICENSE](LICENSE) for details.
 - [Synheart Core SDK](https://github.com/synheart-ai/synheart-core-sdk) - Unified SDK for all Synheart features
 - [Synheart Wear](https://github.com/synheart-ai/synheart-wear) - Wearable device integration
 
-## 📞 Support
+## 🔗 Links
 
+- **Synheart AI**: [synheart.ai](https://synheart.ai)
 - **Documentation**: [docs.synheart.ai](https://docs.synheart.ai)
 - **Issues**: [GitHub Issues](https://github.com/synheart-ai/synheart-focus/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/synheart-ai/synheart-focus/discussions)
 
+## 👥 Authors
+
+- **Israel Goytom** - _Initial work_, _RFC Design & Architecture_
+- **Synheart AI Team** - _Development & Research_
+
 ---
 
-**Author**: Israel Goytom  
-**Organization**: Synheart Research & Engineering
+**Made with ❤️ by the Synheart AI Team**
+
+_Technology with a heartbeat._
 
