@@ -16,6 +16,7 @@ Synheart Focus is the cognitive concentration layer of Synheart — estimating m
 - **📈 Cognitive Load Estimation**: Predicts mental workload and fatigue risk
 - **🔒 Privacy-First**: No raw biometrics stored; only interpreted signals
 - **🌐 Multi-Platform**: Python, Flutter/Dart, Android/Kotlin, iOS/Swift
+- **🏗️ HSI-Compatible**: Output schema validated against Synheart Core HSI specification
 
 ## 📦 SDKs
 
@@ -51,6 +52,85 @@ dependencies: [
 ```
 📖 **Repository**: [synheart-focus-swift](https://github.com/synheart-ai/synheart-focus-swift)
 
+## 🏗️ Relationship with Synheart Core (HSI)
+
+Synheart Focus serves **two deployment modes**:
+
+### 1. **Standalone SDK** (Direct Integration)
+Use synheart-focus directly for focus-only applications:
+
+```python
+from synheart_focus import FocusEngine, FocusConfig
+
+engine = FocusEngine.from_config(FocusConfig())
+focus_state = engine.infer(hsi_data, behavior_data)
+print(f"Focus Score: {focus_state.focus_score}")
+```
+
+**Use when:** Your app only needs focus estimation, not full human state intelligence.
+
+### 2. **Via Synheart Core** (HSI Integration)
+Use focus as part of a complete Human State Interface with emotion, behavior, and context:
+
+```dart
+import 'package:synheart_core/synheart_core.dart';
+
+// Initialize synheart-core (includes focus capability)
+await Synheart.initialize(
+  userId: 'user_123',
+  config: SynheartConfig(
+    enableWear: true,
+    enableBehavior: true,
+  ),
+);
+
+// Enable focus interpretation layer
+await Synheart.enableFocus();
+
+// Get focus updates (powered by synheart-focus under the hood)
+Synheart.onFocusUpdate.listen((focus) {
+  print('Focus Score: ${focus.score}');
+  print('Cognitive Load: ${focus.cognitiveLoad}');
+});
+```
+
+**Use when:** You want focus as part of a unified human state representation (HSV).
+
+### Architecture & Dependencies
+
+```
+┌─────────────────────────────────────────────────────┐
+│          Synheart Core (HSI Runtime)                │
+│                                                     │
+│  FocusHead Module                                   │
+│    └─► depends on synheart-focus package           │
+│         (runtime dependency)                        │
+└─────────────────────────────────────────────────────┘
+                      ▲
+                      │
+                      │ runtime: package dependency
+                      │ schema: validates against HSI spec
+                      │
+┌─────────────────────────────────────────────────────┐
+│          synheart-focus (this repo)                 │
+│                                                     │
+│  • Standalone focus inference SDK                   │
+│  • NO code dependency on synheart-core              │
+│  • Output schema validated against:                 │
+│    ../synheart-core/docs/HSI_SPECIFICATION.md       │
+│                                                     │
+│  FocusEngine → FocusResult                          │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+**Key Principles:**
+- ✅ **Standalone**: synheart-focus works independently, no core dependency
+- ✅ **HSI-Compatible**: Output schema matches HSI FocusState specification
+- ✅ **Schema Validation**: CI enforces compatibility with HSI spec
+- ✅ **Used by Core**: synheart-core's FocusHead uses synheart-focus as implementation
+- ✅ **Backward Compatible**: Existing standalone users unaffected
+
 ## 📂 Repository Structure
 
 This repository serves as the **source of truth** for shared resources across all SDK implementations:
@@ -65,8 +145,12 @@ synheart-focus/
 ├── models/                        # ML model definitions (if applicable)
 │   └── README.md                  # Model documentation
 │
+├── tools/                         # Development tools
+│   └── validate_hsi_schema.py     # HSI schema validation (CI)
+│
 ├── examples/                      # Cross-platform example applications
 ├── scripts/                       # Build and deployment scripts
+├── .github/workflows/             # CI/CD including HSI schema checks
 └── CONTRIBUTING.md                # Contribution guidelines for all SDKs
 ```
 
@@ -214,6 +298,8 @@ let focusState = try engine.infer(hsiData: hsiData, behaviorData: behaviorData)
 
 ## 🏗️ Architecture
 
+### Standalone Mode
+
 Synheart Focus is a **multimodal fusion model** that combines:
 
 ### Inputs
@@ -255,7 +341,7 @@ For every time window (30-60 seconds, updated every 1-2 minutes):
 | `deep_focus_block` | Sustained focus flag | true/false |
 | `fatigue_risk` | Focus decline likelihood | 0.0 → 1.0 |
 
-### System Flow
+### System Flow (Standalone)
 
 ```
 Wear SDK / Phone / Behavior SDKs
@@ -269,11 +355,40 @@ Wear SDK / Phone / Behavior SDKs
       (Tiny Transformer or CNN-LSTM)
                 │
                 ▼
-         HSI Focus Head
+           FocusResult
                 │
-      ┌─────────┴───────────┐
-      ▼                     ▼
-    Syni                Syni Life / SWIP / Platform
+                ▼
+          Your Application
+```
+
+### HSI Integration Mode
+
+When used via Synheart Core:
+
+```
+Synheart Core SDK
+├── Wear Module (collects HR/RR from wearable)
+├── Phone Module (device motion, screen state)
+├── Behavior Module (interaction patterns)
+│   └── HSI Runtime (processes biosignals, multimodal fusion)
+│       └── FocusHead Module
+│           └── synheart-focus FocusEngine
+│               [Multimodal Fusion Model]
+│                       │
+│                  FocusResult
+│                       │
+│            mapped to HSV.focus
+│                       │
+│                       ▼
+│         Complete Human State Vector
+│         ├─ Focus (score, cognitive load, clarity)
+│         ├─ Emotion (stress, calm, engagement)
+│         ├─ Behavior (interaction patterns)
+│         └─ Context (activity, environment)
+│                       │
+│         ┌─────────────┴───────────┐
+│         ▼                         ▼
+│       Syni              Syni Life / SWIP / Platform
 ```
 
 ## 📚 Documentation
@@ -340,12 +455,45 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🔗 Related Projects
+## 🔗 Related Projects & Dependencies
 
-- [Synheart Emotion](https://github.com/synheart-ai/synheart-emotion) - Physiological emotion inference
-- [Synheart Behavior](https://github.com/synheart-ai/synheart-behavior) - Digital behavioral signal capture
-- [Synheart Core SDK](https://github.com/synheart-ai/synheart-core-sdk) - Unified SDK for all Synheart features
-- [Synheart Wear](https://github.com/synheart-ai/synheart-wear) - Wearable device integration
+### Consumed By
+
+- **[Synheart Core SDK](https://github.com/synheart-ai/synheart-core-sdk)** - Unified SDK for all Synheart features
+  - Uses synheart-focus as FocusHead implementation
+  - Runtime dependency: synheart-core → synheart-focus
+  - Schema validation: synheart-focus validates against HSI spec
+
+### Related SDKs
+
+- **[Synheart Emotion](https://github.com/synheart-ai/synheart-emotion)** - Physiological emotion inference
+  - Similar architecture: standalone SDK used by synheart-core EmotionHead
+  - Also validates against HSI specification
+
+- **[Synheart Behavior](https://github.com/synheart-ai/synheart-behavior)** - Digital behavioral signal capture
+  - Provides behavioral inputs for focus estimation
+  - Used by: Behavior Module in synheart-core
+
+- **[Synheart Wear](https://github.com/synheart-ai/synheart-wear)** - Wearable device integration
+  - Provides biosignal inputs (HR, HRV) for focus estimation
+  - Used by: Wear Module in synheart-core
+
+### Dependency Architecture
+
+```
+Runtime Dependencies (package):
+  synheart-core → synheart-focus (FocusHead implementation)
+  synheart-focus → (standalone, no dependencies on core)
+
+Schema Validation (no code dependency):
+  synheart-focus ← validates against HSI_SPECIFICATION.md
+```
+
+**Key Principle:**
+- synheart-focus remains a **standalone SDK**
+- Can be used independently without synheart-core
+- synheart-core uses it as implementation layer for FocusHead
+- Output schema validated against HSI specification for compatibility
 
 ## 🔗 Links
 

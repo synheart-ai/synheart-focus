@@ -175,6 +175,116 @@ We welcome feature requests! Please:
 - Explain the expected behavior
 - Consider implementation complexity
 
+## 🏗️ Coordination with Synheart Core (HSI)
+
+synheart-focus is consumed by `synheart-core`'s FocusHead module. When making changes, coordinate with synheart-core to ensure compatibility.
+
+### Dependency Architecture
+
+```
+Runtime Dependency (package):
+  synheart-core → synheart-focus
+  (core depends on focus package)
+
+Schema Validation (no code dependency):
+  synheart-focus validates against:
+    ../synheart-core/docs/HSI_SPECIFICATION.md
+```
+
+### HSI Schema Compatibility Requirements
+
+**Critical APIs** (used by synheart-core FocusHead):
+- `FocusEngine.infer(hsi_data, behavior_data)` - Inference interface
+- `FocusResult` - Output schema (must map to HSI FocusState)
+- `FocusConfig` - Configuration interface
+
+### Making Changes That Affect HSI
+
+When modifying these components, ensure:
+
+1. **API Backward Compatibility**: Don't break FocusEngine interface
+   - FocusHead relies on stable API surface
+   - Use deprecation warnings for API changes
+   - Provide migration path for breaking changes
+
+2. **Schema Compatibility**: FocusResult must map to HSI FocusState
+   ```
+   FocusResult field      → HSI FocusState field
+   ──────────────────────────────────────────────
+   focus_score            → focus.score
+   cognitive_load         → focus.cognitiveLoad
+   clarity                → focus.clarity
+   distraction            → focus.distraction
+   focus_label            → (categorical mapping)
+   ```
+
+3. **Run HSI Schema Validation**:
+   ```bash
+   # Validate against HSI specification
+   python tools/validate_hsi_schema.py --spec ../synheart-core/docs/HSI_SPECIFICATION.md
+   ```
+
+   This script checks:
+   - FocusResult fields match HSI FocusState schema
+   - Output formats are compatible
+   - Data types and ranges align
+
+4. **CI Enforcement**: Schema validation runs automatically on every PR
+   - GitHub Actions workflow: `.github/workflows/hsi_schema_check.yml`
+   - Fails PR if schema incompatibility detected
+
+5. **Coordinate with Core Team**:
+   - Notify synheart-core team before releasing breaking changes
+   - Update synheart-core integration tests if changing FocusEngine behavior
+   - Coordinate version bumps with core team
+
+### Testing HSI Integration
+
+When making changes that affect HSI integration:
+
+1. **Local Testing** (if you have synheart-core checked out):
+   ```bash
+   # Test standalone
+   cd synheart-focus
+   pytest  # or flutter test, etc.
+
+   # Test HSI integration
+   cd ../synheart-core
+   flutter test test/heads/focus_head_test.dart
+   ```
+
+2. **Verify FocusHead Compatibility**:
+   - Check that FocusHead can initialize FocusEngine
+   - Verify data mapping from HSV to FocusEngine works
+   - Confirm FocusResult maps correctly to HSV.focus
+
+3. **Cross-Platform Consistency**:
+   - Changes must work across Python, Dart, Kotlin, Swift implementations
+   - Verify all platforms produce consistent results
+
+### Breaking Change Protocol
+
+If you need to make a breaking change to FocusEngine or FocusResult:
+
+1. **Document Impact**: Describe impact on synheart-core FocusHead
+2. **Create Issue**: Open issue in synheart-core repo
+3. **Migration Path**: Provide code examples for migration
+4. **Deprecation Period**: Give 2+ releases notice before removal
+5. **Coordinated Release**: Sync releases with synheart-core team
+6. **Update HSI Spec**: If schema changes, update `../synheart-core/docs/HSI_SPECIFICATION.md`
+
+### Example: Adding New Focus Metric
+
+If adding a new output metric (e.g., "mental_fatigue"):
+
+1. ✅ Update FocusResult to include "mental_fatigue"
+2. ✅ Update models to output new metric
+3. ✅ Run schema validation against HSI spec
+4. ❌ **DO NOT** assume HSI will automatically support it
+5. ✅ Create issue in synheart-core to discuss HSI integration
+6. ✅ Update HSI_SPECIFICATION.md (if approved)
+7. ✅ Wait for synheart-core FocusHead update before releasing
+
 ## 📄 License
 
 By contributing, you agree that your contributions will be licensed under the MIT License.
