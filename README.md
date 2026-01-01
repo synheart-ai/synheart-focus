@@ -2,8 +2,8 @@
 
 **Cognitive concentration inference engine — transforming biosignals and digital behavior into real-time focus intelligence**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Platform Support](https://img.shields.io/badge/platforms-Python%20%7C%20Dart%20%7C%20Kotlin%20%7C%20Swift-blue.svg)](#-sdks)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Platform Support](https://img.shields.io/badge/platforms-Dart%20%7C%20Python%20%7C%20Kotlin%20%7C%20Swift-blue.svg)](#-sdks)
 
 Synheart Focus is the cognitive concentration layer of Synheart — estimating moment-to-moment focus levels by fusing biosignals, behavioral interaction patterns, and circadian context. It powers Syni, Syni Life, SWIP, and any mind-aware application built on Synheart.
 
@@ -15,12 +15,19 @@ Synheart Focus is the cognitive concentration layer of Synheart — estimating m
 - **🎯 Focus Labels**: Discrete states (focused, distracted, scattered, fatigued)
 - **📈 Cognitive Load Estimation**: Predicts mental workload and fatigue risk
 - **🔒 Privacy-First**: No raw biometrics stored; only interpreted signals
-- **🌐 Multi-Platform**: Python, Flutter/Dart, Android/Kotlin, iOS/Swift
+- **🌐 Multi-Platform**: Dart/Flutter, Python, Kotlin, Swift
 - **🏗️ HSI-Compatible**: Output schema validated against Synheart Core HSI specification
 
 ## 📦 SDKs
 
 All SDKs provide **identical functionality** with platform-idiomatic APIs. Each SDK is maintained in its own repository:
+
+### Dart/Flutter SDK
+```yaml
+dependencies:
+  synheart_focus: ^0.1.0
+```
+📖 **Repository**: [synheart-focus-dart](https://github.com/synheart-ai/synheart-focus-dart)
 
 ### Python SDK
 ```bash
@@ -28,14 +35,7 @@ pip install synheart-focus
 ```
 📖 **Repository**: [synheart-focus-python](https://github.com/synheart-ai/synheart-focus-python)
 
-### Flutter/Dart SDK
-```yaml
-dependencies:
-  synheart_focus: ^0.1.0
-```
-📖 **Repository**: [synheart-focus-dart](https://github.com/synheart-ai/synheart-focus-dart)
-
-### Android SDK (Kotlin)
+### Kotlin SDK
 ```kotlin
 dependencies {
     implementation("ai.synheart:focus:0.1.0")
@@ -43,7 +43,7 @@ dependencies {
 ```
 📖 **Repository**: [synheart-focus-kotlin](https://github.com/synheart-ai/synheart-focus-kotlin)
 
-### iOS SDK (Swift)
+### Swift SDK
 **Swift Package Manager:**
 ```swift
 dependencies: [
@@ -136,33 +136,71 @@ Synheart.onFocusUpdate.listen((focus) {
 This repository serves as the **source of truth** for shared resources across all SDK implementations:
 
 ```
-synheart-focus/
+synheart-focus/                    # Source of truth repository
+├── models/                        # ML model definitions and assets
+│   └── README.md                  # Model documentation
+│
 ├── docs/                          # Technical documentation
 │   ├── ARCHITECTURE.md            # System architecture
 │   ├── API_REFERENCE.md           # API documentation
-│   └── INTEGRATION.md             # Integration guides
-│
-├── models/                        # ML model definitions (if applicable)
-│   └── README.md                  # Model documentation
+│   ├── INTEGRATION.md             # Integration guides
+│   └── MODEL_CARD.md              # Model details and performance
 │
 ├── tools/                         # Development tools
-│   └── validate_hsi_schema.py     # HSI schema validation (CI)
+│   ├── validate_hsi_schema.py     # HSI schema validation (CI)
+│   └── README.md                  # Tools documentation
 │
 ├── examples/                      # Cross-platform example applications
+│   └── README.md                  # Examples documentation
 ├── scripts/                       # Build and deployment scripts
+│   └── README.md                  # Scripts documentation
 ├── .github/workflows/             # CI/CD including HSI schema checks
+├── CHANGELOG.md                   # Version history for all SDKs
 └── CONTRIBUTING.md                # Contribution guidelines for all SDKs
 ```
 
 **Platform-specific SDK repositories** (maintained separately):
+- [synheart-focus-dart](https://github.com/synheart-ai/synheart-focus-dart) - Dart/Flutter SDK
 - [synheart-focus-python](https://github.com/synheart-ai/synheart-focus-python) - Python SDK
-- [synheart-focus-dart](https://github.com/synheart-ai/synheart-focus-dart) - Flutter/Dart SDK
-- [synheart-focus-kotlin](https://github.com/synheart-ai/synheart-focus-kotlin) - Android/Kotlin SDK
-- [synheart-focus-swift](https://github.com/synheart-ai/synheart-focus-swift) - iOS/Swift SDK
+- [synheart-focus-kotlin](https://github.com/synheart-ai/synheart-focus-kotlin) - Kotlin SDK
+- [synheart-focus-swift](https://github.com/synheart-ai/synheart-focus-swift) - Swift SDK
 
 ## 🎯 Quick Start
 
-### Python (Recommended for Testing)
+### Dart/Flutter
+
+```dart
+import 'package:synheart_focus/synheart_focus.dart';
+
+// Initialize
+final focusEngine = FocusEngine.initialize(
+  config: FocusConfig(),
+);
+
+// Subscribe to updates
+focusEngine.onUpdate.listen((focusState) {
+  print('Focus Score: ${focusState.focusScore}');
+  print('Label: ${focusState.focusLabel}');
+});
+
+// Provide inputs and get focus state
+final hsiData = HSIData(
+  hr: 72,
+  hrvRmssd: 45,
+  stressIndex: 0.3,
+  motionIntensity: 0.1,
+);
+
+final behaviorData = BehaviorData(
+  taskSwitchRate: 0.2,
+  interactionBurstiness: 0.15,
+  idleRatio: 0.1,
+);
+
+final focusState = await focusEngine.infer(hsiData, behaviorData);
+```
+
+### Python
 
 ```python
 from synheart_focus import FocusEngine, FocusConfig
@@ -195,39 +233,6 @@ behavior_data = {
 
 # Infer focus state
 focus_state = engine.infer(hsi_data, behavior_data)
-```
-
-### Flutter/Dart
-
-```dart
-import 'package:synheart_focus/synheart_focus.dart';
-
-// Initialize
-final focusEngine = FocusEngine.initialize(
-  config: FocusConfig(),
-);
-
-// Subscribe to updates
-focusEngine.onUpdate.listen((focusState) {
-  print('Focus Score: ${focusState.focusScore}');
-  print('Label: ${focusState.focusLabel}');
-});
-
-// Provide inputs and get focus state
-final hsiData = HSIData(
-  hr: 72,
-  hrvRmssd: 45,
-  stressIndex: 0.3,
-  motionIntensity: 0.1,
-);
-
-final behaviorData = BehaviorData(
-  taskSwitchRate: 0.2,
-  interactionBurstiness: 0.15,
-  idleRatio: 0.1,
-);
-
-final focusState = await focusEngine.infer(hsiData, behaviorData);
 ```
 
 ### Kotlin
@@ -397,6 +402,8 @@ Synheart Core SDK
 - [API Reference](docs/API_REFERENCE.md) - Complete API documentation
 - [Integration Guide](docs/INTEGRATION.md) - Integration with HSI, Syni, and other services
 - [Model Card](docs/MODEL_CARD.md) - Model details and performance metrics
+- [Contributing Guide](CONTRIBUTING.md) - How to contribute (covers all SDKs)
+- [Changelog](CHANGELOG.md) - Version history for all SDKs
 
 ## 🎯 Use Cases
 
@@ -453,7 +460,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ## 🔗 Related Projects & Dependencies
 
